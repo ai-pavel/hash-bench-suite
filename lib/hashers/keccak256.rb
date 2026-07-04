@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "digest/sha3"
+require "digest/keccak"
 require_relative "base"
 
 module HashBenchmarkSuite
@@ -11,7 +11,7 @@ module HashBenchmarkSuite
       end
 
       def digest(data)
-        ::Digest::SHA3.hexdigest(data, 256)
+        ::Digest::Keccak.hexdigest(data, 256)
       end
 
       def digest_length
