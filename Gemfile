@@ -8,4 +8,6 @@ gem "keccak",       "~> 1.3"
 
 group :development, :test do
   gem "rspec", "~> 3.12"
+  gem 'simplecov', require: false
+  gem 'simplecov-cobertura', require: false
 end

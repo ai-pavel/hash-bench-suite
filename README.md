@@ -1,6 +1,7 @@
 # Hash Benchmark Suite
 
 [![CI](https://github.com/pavel-genai/hash-benchmark-suite/actions/workflows/ci.yml/badge.svg)](https://github.com/pavel-genai/hash-benchmark-suite/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/pavel-genai/hash-bench-suite/branch/main/graph/badge.svg)](https://codecov.io/gh/pavel-genai/hash-bench-suite)
 
 A Ruby benchmarking suite for cryptographic hash functions. Compares throughput, latency, and memory allocation across multiple hash algorithms using inputs of varying sizes.
 
