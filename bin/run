@@ -1,0 +1,104 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require_relative "../lib/benchmark_runner"
+
+module HashBenchmarkSuite
+  class CLI
+    def initialize(argv)
+      @argv = argv
+      @json_only = false
+      @output_file = nil
+      @sizes = nil
+      @hasher_names = nil
+      parse_options!
+    end
+
+    def execute
+      runner = BenchmarkRunner.new(
+        hasher_names: @hasher_names || BenchmarkRunner::HASHER_REGISTRY.keys,
+        sizes: @sizes || BenchmarkRunner::DEFAULT_SIZES
+      )
+
+      $stderr.puts "Hash Benchmark Suite"
+      $stderr.puts "=" * 40
+      $stderr.puts "Hashers: #{runner.hashers.map(&:name).join(', ')}"
+      $stderr.puts "Input sizes: #{runner.sizes.map { |s| human_size(s) }.join(', ')}"
+      $stderr.puts "=" * 40
+      $stderr.puts ""
+
+      runner.run!
+
+      unless @json_only
+        puts ""
+        puts runner.to_ascii_table
+        puts ""
+      end
+
+      if @json_only
+        puts runner.to_json
+      end
+
+      if @output_file
+        File.write(@output_file, runner.to_json)
+        $stderr.puts "Results written to #{@output_file}"
+      end
+    end
+
+    private
+
+    def parse_options!
+      i = 0
+      while i < @argv.length
+        case @argv[i]
+        when "--json"
+          @json_only = true
+        when "--output"
+          i += 1
+          @output_file = @argv[i]
+        when "--sizes"
+          i += 1
+          @sizes = @argv[i].split(",").map { |s| Integer(s.strip) }
+        when "--hashers"
+          i += 1
+          @hasher_names = @argv[i].split(",").map(&:strip)
+        when "--help", "-h"
+          print_help
+          exit 0
+        else
+          $stderr.puts "Unknown option: #{@argv[i]}"
+          print_help
+          exit 1
+        end
+        i += 1
+      end
+    end
+
+    def print_help
+      $stderr.puts <<~HELP
+        Usage: bin/run [OPTIONS]
+
+        Options:
+          --json           Output results as JSON to stdout
+          --output FILE    Write JSON results to FILE
+          --sizes SIZES    Comma-separated input sizes in bytes
+                           (default: 1024,1048576,104857600)
+          --hashers LIST   Comma-separated hasher names
+                           (available: #{BenchmarkRunner::HASHER_REGISTRY.keys.join(', ')})
+          --help, -h       Show this help message
+      HELP
+    end
+
+    def human_size(bytes)
+      case bytes
+      when 0...1_024 then "#{bytes} B"
+      when 1_024...1_048_576 then "#{bytes / 1_024} KB"
+      when 1_048_576...1_073_741_824 then "#{bytes / 1_048_576} MB"
+      else "#{bytes / 1_073_741_824} GB"
+      end
+    end
+  end
+end
+
+HashBenchmarkSuite::CLI.new(ARGV).execute
