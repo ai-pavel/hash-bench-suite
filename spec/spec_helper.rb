@@ -2,9 +2,19 @@ require 'simplecov'
 require 'simplecov-cobertura'
 SimpleCov.start do
   formatter SimpleCov::Formatter::CoberturaFormatter
+  skip "/vendor/"
 end
 
 # frozen_string_literal: true
+
+# On platforms where the native `blake2b` C extension cannot be built
+# (e.g. arm64-darwin with the current Xcode toolchain), fall back to a
+# pure-Ruby shim backed by the `digest-blake2b` gem. CI (ubuntu x86_64)
+# uses the real native `blake2b` gem via bundler and skips this fallback.
+unless Gem::Specification.find_all_by_name("blake2b").any?
+  shim_lib = File.expand_path("../vendor/blake2b_shim/lib", __dir__)
+  $LOAD_PATH.unshift(shim_lib)
+end
 
 require "bundler/setup"
 require_relative "../lib/hashers/sha256"

@@ -20,9 +20,8 @@ RSpec.describe HashBenchmarkSuite::Hashers::Blake2b do
   describe "#digest" do
     # Blake2b-256 test vectors (unkeyed, 32-byte output)
     it "hashes empty string correctly" do
-      # Blake2b-256("") — well-known test vector
-      expected = "0e5751c9933e39f97817d7e1f12b5f1e5b8141c0e8208e008e5f1b35d9ad8e33"
-      # Note: blake2b gem may return uppercase; normalize
+      # Blake2b-256("") — canonical test vector
+      expected = "0e5751c026e543b2e8ab2eb06099daa1d1e5df47778f7787faab45cdf12fe3a8"
       expect(hasher.digest("").downcase).to eq(expected)
     end
 

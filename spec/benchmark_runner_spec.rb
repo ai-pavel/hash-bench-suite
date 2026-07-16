@@ -142,4 +142,50 @@ RSpec.describe HashBenchmarkSuite::BenchmarkRunner do
       expect(skipped["skip_reason"]).to include("Poseidon")
     end
   end
+
+  describe "human_size" do
+    it "formats bytes below 1 KB as B" do
+      runner = described_class.new(hasher_names: ["sha256"], sizes: [512])
+      runner.run!
+      expect(runner.results.first[:input_label]).to eq("512 B")
+    end
+
+    it "formats kilobytes" do
+      runner = described_class.new(hasher_names: ["sha256"], sizes: [2_097_152])
+      runner.run!
+      expect(runner.results.first[:input_label]).to eq("2 MB")
+    end
+
+    it "formats gigabytes" do
+      runner = described_class.new(hasher_names: ["sha256"], sizes: [1_073_741_824])
+      runner.run!
+      expect(runner.results.first[:input_label]).to eq("1 GB")
+    end
+  end
+
+  describe "measure_memory error handling" do
+    it "returns nil for memory_bytes when the hasher raises during measurement" do
+      hasher = HashBenchmarkSuite::Hashers::SHA256.new
+      call_count = 0
+      allow(hasher).to receive(:digest) do
+        call_count += 1
+        call_count == 1 ? "00" * 32 : raise(StandardError, "boom")
+      end
+      allow(HashBenchmarkSuite::Hashers::SHA256).to receive(:new).and_return(hasher)
+
+      entry = instance_double(Benchmark::IPS::Report::Entry, ips: 1_000_000.0)
+      full_report = instance_double(Benchmark::IPS::Report, entries: [entry])
+      job = instance_double(Benchmark::IPS::Job)
+      allow(Benchmark::IPS::Job).to receive(:new).and_return(job)
+      allow(job).to receive(:config)
+      allow(job).to receive(:report) { |name, &block| }
+      allow(job).to receive(:run)
+      allow(job).to receive(:full_report).and_return(full_report)
+
+      runner = described_class.new(hasher_names: ["sha256"], sizes: [64])
+      runner.run!
+      result = runner.results.first
+      expect(result[:memory_bytes]).to be_nil
+    end
+  end
 end

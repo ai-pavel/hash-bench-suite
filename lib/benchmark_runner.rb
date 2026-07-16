@@ -150,7 +150,7 @@ module HashBenchmarkSuite
       report.report(hasher.name) { hasher.digest(data) }
       report.run
 
-      entry = report.entries.first
+      entry = report.full_report.entries.first
       iterations_per_second = entry.ips
 
       # Calculate throughput and latency
@@ -165,7 +165,7 @@ module HashBenchmarkSuite
         input_size: size,
         input_label: human_size(size),
         throughput_mbps: throughput_mbps.round(2),
-        latency_ns_per_op: latency_ns.round(0),
+        latency_ns_per_op: latency_ns.round(0).to_f,
         memory_bytes: memory_bytes,
         skipped: false
       }
